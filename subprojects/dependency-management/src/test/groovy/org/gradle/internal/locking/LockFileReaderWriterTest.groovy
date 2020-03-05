@@ -156,6 +156,21 @@ empty=d
         result == [a: ['bar', 'foo'], b: ['foo'], c: ['bar', 'foo'], d: []]
     }
 
+    def 'fails to read a unique lockfile if root could not be determined'() {
+        FileResolver resolver = Mock()
+        resolver.canResolveRelativePath() >> false
+        lockFileReaderWriter = new LockFileReaderWriter(resolver, context)
+
+        when:
+        lockFileReaderWriter.readUniqueLockFile()
+
+        then:
+        def ex = thrown(IllegalStateException)
+        1 * context.getProjectPath() >> Path.path('foo')
+        ex.getMessage().contains('Dependency locking cannot be used for project')
+        ex.getMessage().contains('foo')
+    }
+
     def 'fails to read a legacy lockfile if root could not be determined'() {
         FileResolver resolver = Mock()
         resolver.canResolveRelativePath() >> false
@@ -168,6 +183,21 @@ empty=d
         def ex = thrown(IllegalStateException)
         1 * context.identityPath('foo') >> Path.path('foo')
         ex.getMessage().contains('Dependency locking cannot be used for configuration')
+        ex.getMessage().contains('foo')
+    }
+
+    def 'fails to write a unique lockfile if root could not be determined'() {
+        FileResolver resolver = Mock()
+        resolver.canResolveRelativePath() >> false
+        lockFileReaderWriter = new LockFileReaderWriter(resolver, context)
+
+        when:
+        lockFileReaderWriter.writeUniqueLockfile([foo: ['a:b:1.0']])
+
+        then:
+        def ex = thrown(IllegalStateException)
+        1 * context.getProjectPath() >> Path.path('foo')
+        ex.getMessage().contains('Dependency locking cannot be used for project')
         ex.getMessage().contains('foo')
     }
 
